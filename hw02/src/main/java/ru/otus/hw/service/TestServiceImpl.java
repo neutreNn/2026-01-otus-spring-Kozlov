@@ -19,9 +19,22 @@ public class TestServiceImpl implements TestService {
         var questions = questionDao.findAll();
         var testResult = new TestResult(student);
 
-        for (var question: questions) {
-            var isAnswerValid = false; // Задать вопрос, получить ответ
+        for (int i = 0; i < questions.size(); i++) {
+            var question = questions.get(i);
+            ioService.printFormattedLine("%d. %s", i + 1, question.text());
+            for (int j = 0; j < question.answers().size(); j++) {
+                ioService.printFormattedLine("   %d) %s", j + 1, question.answers().get(j).text());
+            }
+            var answersCount = question.answers().size();
+            var answerNumber = ioService.readIntForRangeWithPrompt(
+                    1,
+                    answersCount,
+                    "Input answer number:",
+                    "Please input number from 1 to " + answersCount
+            );
+            var isAnswerValid = question.answers().get(answerNumber - 1).isCorrect();
             testResult.applyAnswer(question, isAnswerValid);
+            ioService.printLine("");
         }
         return testResult;
     }
