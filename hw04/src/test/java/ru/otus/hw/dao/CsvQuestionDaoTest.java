@@ -4,16 +4,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import ru.otus.hw.config.TestFileNameProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
-@SpringBootTest(properties = {
-        "spring.shell.interactive.enabled=false",
-        "spring.shell.noninteractive.enabled=false",
-        "spring.shell.script.enabled=false",
-        "test.file-name-by-locale-tag[en-US]=test-questions.csv"
-})
+@SpringBootTest(classes = CsvQuestionDao.class)
 class CsvQuestionDaoTest {
+
+    @MockitoBean
+    private TestFileNameProvider fileNameProvider;
 
     @Autowired
     private QuestionDao questionDao;
@@ -21,6 +22,9 @@ class CsvQuestionDaoTest {
     @Test
     @DisplayName("Should return questions list from test-questions.csv file")
     void shouldReturnQuestionsFromTestResource() {
+        // Arrange
+        when(fileNameProvider.getTestFileName()).thenReturn("test-questions.csv");
+
         // Act
         var questions = questionDao.findAll();
 

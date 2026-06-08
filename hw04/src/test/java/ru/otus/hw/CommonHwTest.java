@@ -16,11 +16,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(properties = {
-        "spring.shell.interactive.enabled=false",
-        "spring.shell.noninteractive.enabled=false",
-        "spring.shell.script.enabled=false"
-})
+@SpringBootTest(classes = AppProperties.class)
 class CommonHwTest {
 
     private static final String CONFIGURATION_ANNOTATION_NAME = "org.springframework.context.annotation.Configuration";

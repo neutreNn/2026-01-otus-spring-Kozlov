@@ -12,11 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(properties = {
-        "spring.shell.interactive.enabled=false",
-        "spring.shell.noninteractive.enabled=false",
-        "spring.shell.script.enabled=false"
-})
+@SpringBootTest(classes = TestCommands.class)
 class TestCommandsTest {
 
     @MockitoBean
