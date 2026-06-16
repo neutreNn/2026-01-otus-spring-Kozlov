@@ -8,6 +8,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -24,7 +26,16 @@ import lombok.ToString;
 @NoArgsConstructor
 @Entity
 @Table(name = "books")
+@NamedEntityGraph(
+        name = "book-author-genre-entity-graph",
+        attributeNodes = {
+                @NamedAttributeNode("author"),
+                @NamedAttributeNode("genre")
+        }
+)
 public class Book {
+    public static final String AUTHOR_GENRE_ENTITY_GRAPH = "book-author-genre-entity-graph";
+
     @EqualsAndHashCode.Include
     @ToString.Include
     @Id

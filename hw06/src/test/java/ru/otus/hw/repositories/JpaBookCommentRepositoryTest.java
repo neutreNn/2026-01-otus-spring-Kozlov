@@ -1,6 +1,5 @@
 package ru.otus.hw.repositories;
 
-import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,17 +22,13 @@ class JpaBookCommentRepositoryTest {
     @Autowired
     private TestEntityManager entityManager;
 
-    @Autowired
-    private EntityManagerFactory entityManagerFactory;
-
     @DisplayName("должен загружать комментарий по id")
     @Test
     void shouldReturnCorrectCommentById() {
         var actualComment = bookCommentRepository.findById(1L);
 
         assertThat(actualComment).isPresent();
-        assertComment(actualComment.get(), 1L, "Comment_1", 1L, "BookTitle_1");
-        assertCommentRelationsAreLoaded(actualComment.get());
+        assertComment(actualComment.get(), 1L, "Comment_1");
     }
 
     @DisplayName("должен загружать комментарии по id книги")
@@ -47,10 +42,6 @@ class JpaBookCommentRepositoryTest {
                 .containsExactly(
                         tuple(1L, "Comment_1"),
                         tuple(2L, "Comment_2"));
-        actualComments.forEach(comment -> {
-            assertThat(comment.getBook().getId()).isEqualTo(1L);
-            assertCommentRelationsAreLoaded(comment);
-        });
     }
 
     @DisplayName("должен сохранять новый комментарий")
@@ -65,13 +56,14 @@ class JpaBookCommentRepositoryTest {
 
         var actualComment = entityManager.find(BookComment.class, savedComment.getId());
         assertThat(savedComment.getId()).isPositive();
-        assertComment(actualComment, savedComment.getId(), "Comment_10500", 1L, "BookTitle_1");
+        assertComment(actualComment, savedComment.getId(), "Comment_10500");
+        assertThat(actualComment.getBook().getId()).isEqualTo(1L);
     }
 
     @DisplayName("должен сохранять измененный комментарий")
     @Test
     void shouldSaveUpdatedComment() {
-        var book = entityManager.find(Book.class, 2L);
+        var book = entityManager.find(Book.class, 1L);
         var updatedComment = new BookComment(1L, "Comment_10500", book);
 
         var savedComment = bookCommentRepository.save(updatedComment);
@@ -79,7 +71,8 @@ class JpaBookCommentRepositoryTest {
         entityManager.clear();
 
         var actualComment = entityManager.find(BookComment.class, savedComment.getId());
-        assertComment(actualComment, 1L, "Comment_10500", 2L, "BookTitle_2");
+        assertComment(actualComment, 1L, "Comment_10500");
+        assertThat(actualComment.getBook().getId()).isEqualTo(1L);
     }
 
     @DisplayName("должен удалять комментарий по id")
@@ -100,18 +93,9 @@ class JpaBookCommentRepositoryTest {
         assertThat(bookCommentRepository.findById(404)).isEmpty();
     }
 
-    private void assertComment(BookComment actualComment, long id, String text, long bookId, String bookTitle) {
+    private void assertComment(BookComment actualComment, long id, String text) {
         assertThat(actualComment).isNotNull();
         assertThat(actualComment.getId()).isEqualTo(id);
         assertThat(actualComment.getText()).isEqualTo(text);
-        assertThat(actualComment.getBook().getId()).isEqualTo(bookId);
-        assertThat(actualComment.getBook().getTitle()).isEqualTo(bookTitle);
-    }
-
-    private void assertCommentRelationsAreLoaded(BookComment comment) {
-        var persistenceUnitUtil = entityManagerFactory.getPersistenceUnitUtil();
-        assertThat(persistenceUnitUtil.isLoaded(comment.getBook())).isTrue();
-        assertThat(persistenceUnitUtil.isLoaded(comment.getBook().getAuthor())).isTrue();
-        assertThat(persistenceUnitUtil.isLoaded(comment.getBook().getGenre())).isTrue();
     }
 }

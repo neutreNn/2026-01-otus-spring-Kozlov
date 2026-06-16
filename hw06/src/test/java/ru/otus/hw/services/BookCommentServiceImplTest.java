@@ -4,7 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.otus.hw.models.BookComment;
+import ru.otus.hw.converters.BookCommentConverter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,27 +14,27 @@ class BookCommentServiceImplTest {
     @Autowired
     private BookCommentService bookCommentService;
 
-    @DisplayName("должен возвращать комментарий со связями, доступными вне сервисного метода")
+    @Autowired
+    private BookCommentConverter bookCommentConverter;
+
+    @DisplayName("должен возвращать комментарий, доступный вне сервисного метода")
     @Test
-    void shouldReturnCommentWithRelationsAvailableOutsideServiceMethod() {
+    void shouldReturnCommentAvailableOutsideServiceMethod() {
         var actualComment = bookCommentService.findById(1L);
 
         assertThat(actualComment).isPresent();
-        assertCommentRelations(actualComment.get(), "BookTitle_1", "Author_1", "Genre_1");
+        assertThat(bookCommentConverter.commentToString(actualComment.get()))
+                .isEqualTo("Id: 1, text: Comment_1");
     }
 
-    @DisplayName("должен возвращать комментарии книги со связями, доступными вне сервисного метода")
+    @DisplayName("должен возвращать комментарии книги, доступные вне сервисного метода")
     @Test
-    void shouldReturnCommentsWithRelationsAvailableOutsideServiceMethod() {
+    void shouldReturnCommentsAvailableOutsideServiceMethod() {
         var actualComments = bookCommentService.findByBookId(1L);
 
         assertThat(actualComments).hasSize(2);
-        actualComments.forEach(comment -> assertCommentRelations(comment, "BookTitle_1", "Author_1", "Genre_1"));
-    }
-
-    private void assertCommentRelations(BookComment comment, String bookTitle, String authorName, String genreName) {
-        assertThat(comment.getBook().getTitle()).isEqualTo(bookTitle);
-        assertThat(comment.getBook().getAuthor().getFullName()).isEqualTo(authorName);
-        assertThat(comment.getBook().getGenre().getName()).isEqualTo(genreName);
+        assertThat(actualComments)
+                .map(bookCommentConverter::commentToString)
+                .containsExactly("Id: 1, text: Comment_1", "Id: 2, text: Comment_2");
     }
 }

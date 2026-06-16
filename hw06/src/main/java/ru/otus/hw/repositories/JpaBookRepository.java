@@ -3,30 +3,25 @@ package ru.otus.hw.repositories;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
-import ru.otus.hw.exceptions.EntityNotFoundException;
 import ru.otus.hw.models.Book;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
 public class JpaBookRepository implements BookRepository {
+    private static final String FETCH_GRAPH_HINT = "jakarta.persistence.fetchgraph";
+
     @PersistenceContext
     private EntityManager entityManager;
 
     @Override
     public Optional<Book> findById(long id) {
-        var books = entityManager.createQuery("""
-                        select b
-                        from Book b
-                            join fetch b.author
-                            join fetch b.genre
-                        where b.id = :id
-                        """, Book.class)
-                .setParameter("id", id)
-                .getResultList();
-
-        return books.stream().findFirst();
+        var properties = Map.<String, Object>of(
+                FETCH_GRAPH_HINT,
+                entityManager.getEntityGraph(Book.AUTHOR_GENRE_ENTITY_GRAPH));
+        return Optional.ofNullable(entityManager.find(Book.class, id, properties));
     }
 
     @Override
@@ -34,10 +29,9 @@ public class JpaBookRepository implements BookRepository {
         return entityManager.createQuery("""
                         select b
                         from Book b
-                            join fetch b.author
-                            join fetch b.genre
                         order by b.id
                         """, Book.class)
+                .setHint(FETCH_GRAPH_HINT, entityManager.getEntityGraph(Book.AUTHOR_GENRE_ENTITY_GRAPH))
                 .getResultList();
     }
 
@@ -48,23 +42,14 @@ public class JpaBookRepository implements BookRepository {
             return book;
         }
 
-        var persistedBook = entityManager.find(Book.class, book.getId());
-        if (persistedBook == null) {
-            throw new EntityNotFoundException("Book with id %d not found".formatted(book.getId()));
-        }
-        persistedBook.setTitle(book.getTitle());
-        persistedBook.setAuthor(book.getAuthor());
-        persistedBook.setGenre(book.getGenre());
-        return persistedBook;
+        return entityManager.merge(book);
     }
 
     @Override
     public void deleteById(long id) {
-        entityManager.createQuery("""
-                        delete from Book b
-                        where b.id = :id
-                        """)
-                .setParameter("id", id)
-                .executeUpdate();
+        var book = entityManager.find(Book.class, id);
+        if (book != null) {
+            entityManager.remove(book);
+        }
     }
 }

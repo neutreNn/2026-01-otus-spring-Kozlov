@@ -19,9 +19,6 @@ public class JpaBookCommentRepository implements BookCommentRepository {
         var comments = entityManager.createQuery("""
                         select c
                         from BookComment c
-                            join fetch c.book b
-                            join fetch b.author
-                            join fetch b.genre
                         where c.id = :id
                         """, BookComment.class)
                 .setParameter("id", id)
@@ -35,10 +32,7 @@ public class JpaBookCommentRepository implements BookCommentRepository {
         return entityManager.createQuery("""
                         select c
                         from BookComment c
-                            join fetch c.book b
-                            join fetch b.author
-                            join fetch b.genre
-                        where b.id = :bookId
+                        where c.book.id = :bookId
                         order by c.id
                         """, BookComment.class)
                 .setParameter("bookId", bookId)
@@ -57,7 +51,6 @@ public class JpaBookCommentRepository implements BookCommentRepository {
             throw new EntityNotFoundException("Book comment with id %d not found".formatted(comment.getId()));
         }
         persistedComment.setText(comment.getText());
-        persistedComment.setBook(comment.getBook());
         return persistedComment;
     }
 

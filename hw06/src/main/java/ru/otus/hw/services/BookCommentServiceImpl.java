@@ -33,25 +33,24 @@ public class BookCommentServiceImpl implements BookCommentService {
     @Override
     @Transactional
     public BookComment insert(String text, long bookId) {
-        return save(0, text, bookId);
+        var book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new EntityNotFoundException("Book with id %d not found".formatted(bookId)));
+        var comment = new BookComment(0, text, book);
+        return bookCommentRepository.save(comment);
     }
 
     @Override
     @Transactional
-    public BookComment update(long id, String text, long bookId) {
-        return save(id, text, bookId);
+    public BookComment update(long id, String text) {
+        var comment = bookCommentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Book comment with id %d not found".formatted(id)));
+        comment.setText(text);
+        return bookCommentRepository.save(comment);
     }
 
     @Override
     @Transactional
     public void deleteById(long id) {
         bookCommentRepository.deleteById(id);
-    }
-
-    private BookComment save(long id, String text, long bookId) {
-        var book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new EntityNotFoundException("Book with id %d not found".formatted(bookId)));
-        var comment = new BookComment(id, text, book);
-        return bookCommentRepository.save(comment);
     }
 }
