@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.Sort;
 import ru.otus.hw.models.Author;
 
 import java.util.List;
@@ -41,7 +42,7 @@ class AuthorRepositoryTest {
                 entityManager.find(Author.class, 2L),
                 entityManager.find(Author.class, 3L));
 
-        var actualAuthors = authorRepository.findAll();
+        var actualAuthors = authorRepository.findAll(Sort.by("id"));
 
         assertThat(actualAuthors).containsExactlyElementsOf(expectedAuthors);
         assertThat(actualAuthors)

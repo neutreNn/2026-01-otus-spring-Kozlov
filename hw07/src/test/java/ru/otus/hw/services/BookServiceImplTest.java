@@ -3,13 +3,18 @@ package ru.otus.hw.services;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.otus.hw.models.Book;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Сервис для работы с книгами ")
-@SpringBootTest
+@DataJpaTest
+@Import(BookServiceImpl.class)
+@Transactional(propagation = Propagation.NEVER)
 class BookServiceImplTest {
     @Autowired
     private BookService bookService;

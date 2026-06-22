@@ -1,6 +1,7 @@
 package ru.otus.hw.services;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.otus.hw.exceptions.EntityNotFoundException;
@@ -27,7 +28,7 @@ public class BookCommentServiceImpl implements BookCommentService {
     @Override
     @Transactional(readOnly = true)
     public List<BookComment> findByBookId(long bookId) {
-        return bookCommentRepository.findByBookId(bookId);
+        return bookCommentRepository.findByBookId(bookId, Sort.by("id"));
     }
 
     @Override

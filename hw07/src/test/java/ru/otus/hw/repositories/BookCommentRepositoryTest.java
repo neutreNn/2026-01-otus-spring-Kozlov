@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.Sort;
 import ru.otus.hw.models.Book;
 import ru.otus.hw.models.BookComment;
 
@@ -32,7 +33,7 @@ class BookCommentRepositoryTest {
     @DisplayName("должен загружать комментарии по id книги")
     @Test
     void shouldReturnCorrectCommentsByBookId() {
-        var actualComments = bookCommentRepository.findByBookId(1L);
+        var actualComments = bookCommentRepository.findByBookId(1L, Sort.by("id"));
 
         assertThat(actualComments)
                 .hasSize(2)
