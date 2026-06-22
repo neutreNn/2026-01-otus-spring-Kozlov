@@ -1,0 +1,19 @@
+spring:
+  data:
+    mongodb:
+      database: library-test
+  shell:
+    history:
+      enabled: false
+    interactive:
+      enabled: false
+    noninteractive:
+      enabled: false
+    script:
+      enabled: false
+
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 7.0.14
