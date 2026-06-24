@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoOperations;
+import ru.otus.hw.listeners.BookCascadeDeleteMongoEventListener;
 import ru.otus.hw.models.Author;
 import ru.otus.hw.models.Book;
 import ru.otus.hw.models.BookComment;
@@ -21,6 +22,7 @@ import ru.otus.hw.repositories.GenreRepository;
         BookCommentServiceImpl.class,
         BookServiceImpl.class,
         GenreServiceImpl.class,
+        BookCascadeDeleteMongoEventListener.class,
         SequenceService.class
 })
 abstract class ServiceMongoTestBase {

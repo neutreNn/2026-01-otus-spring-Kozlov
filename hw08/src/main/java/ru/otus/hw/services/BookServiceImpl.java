@@ -60,6 +60,6 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public void deleteById(long id) {
-        bookRepository.deleteByIdWithComments(id);
+        bookRepository.deleteById(id);
     }
 }
