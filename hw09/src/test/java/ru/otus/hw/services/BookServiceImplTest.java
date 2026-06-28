@@ -7,7 +7,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import ru.otus.hw.models.Book;
+import ru.otus.hw.dto.BookDto;
+import ru.otus.hw.dto.BookIdDto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,10 +23,9 @@ class BookServiceImplTest {
     @DisplayName("должен возвращать книгу со связями, доступными вне сервисного метода")
     @Test
     void shouldReturnBookWithRelationsAvailableOutsideServiceMethod() {
-        var actualBook = bookService.findById(1L);
+        var actualBook = bookService.findById(new BookIdDto(1L));
 
-        assertThat(actualBook).isPresent();
-        assertBookRelations(actualBook.get(), "Author_1", "Genre_1");
+        assertBookRelations(actualBook, "Author_1", "Genre_1");
     }
 
     @DisplayName("должен возвращать список книг со связями, доступными вне сервисного метода")
@@ -39,8 +39,8 @@ class BookServiceImplTest {
         assertBookRelations(actualBooks.get(2), "Author_3", "Genre_3");
     }
 
-    private void assertBookRelations(Book book, String authorName, String genreName) {
-        assertThat(book.getAuthor().getFullName()).isEqualTo(authorName);
-        assertThat(book.getGenre().getName()).isEqualTo(genreName);
+    private void assertBookRelations(BookDto book, String authorName, String genreName) {
+        assertThat(book.getAuthorFullName()).isEqualTo(authorName);
+        assertThat(book.getGenreName()).isEqualTo(genreName);
     }
 }

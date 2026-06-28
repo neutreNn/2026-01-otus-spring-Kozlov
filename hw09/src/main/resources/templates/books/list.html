@@ -35,8 +35,8 @@
                 <td>
                     <a th:href="@{/books/{id}(id=${book.id})}" th:text="${book.title}">BookTitle_1</a>
                 </td>
-                <td th:text="${book.author.fullName}">Author_1</td>
-                <td th:text="${book.genre.name}">Genre_1</td>
+                <td th:text="${book.authorFullName}">Author_1</td>
+                <td th:text="${book.genreName}">Genre_1</td>
                 <td>
                     <div class="actions">
                         <a class="button button--ghost" th:href="@{/books/{id}(id=${book.id})}">Открыть</a>

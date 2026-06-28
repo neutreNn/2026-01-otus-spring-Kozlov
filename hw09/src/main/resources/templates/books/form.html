@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="${bookForm.id == null ? 'Новая книга' : 'Редактирование книги'}">Форма книги</title>
+    <title th:text="${bookId == null ? 'Новая книга' : 'Редактирование книги'}">Форма книги</title>
     <link rel="stylesheet" th:href="@{/css/application.css}">
 </head>
 <body>
@@ -12,13 +12,13 @@
 <main class="page page--narrow">
     <section class="page-header page-header--stacked">
         <div>
-            <p class="eyebrow" th:text="${bookForm.id == null ? 'Создание' : 'Редактирование'}">Создание</p>
-            <h1 th:text="${bookForm.id == null ? 'Новая книга' : 'Книга #' + bookForm.id}">Новая книга</h1>
+            <p class="eyebrow" th:text="${bookId == null ? 'Создание' : 'Редактирование'}">Создание</p>
+            <h1 th:text="${bookId == null ? 'Новая книга' : 'Книга #' + bookId}">Новая книга</h1>
         </div>
     </section>
 
-    <form class="form" th:action="@{${formAction}}" th:object="${bookForm}" method="post">
-        <input type="hidden" th:field="*{id}">
+    <form class="form" th:action="@{${formAction}}" th:object="${book}" method="post">
+        <input th:if="${bookId != null}" type="hidden" name="id" th:value="${bookId}">
 
         <div class="form-field">
             <label for="title">Название</label>

@@ -6,6 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.otus.hw.dto.BookCreateDto;
+import ru.otus.hw.dto.BookDto;
+import ru.otus.hw.dto.BookIdDto;
+import ru.otus.hw.dto.BookUpdateDto;
+import ru.otus.hw.exceptions.EntityNotFoundException;
 import ru.otus.hw.models.Author;
 import ru.otus.hw.models.Book;
 import ru.otus.hw.models.BookComment;
@@ -16,7 +21,6 @@ import ru.otus.hw.services.BookService;
 import ru.otus.hw.services.GenreService;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.verify;
@@ -59,7 +63,7 @@ class BookControllerTest {
     @DisplayName("должен отображать список книг")
     @Test
     void shouldRenderBooksList() throws Exception {
-        var books = List.of(book(1L, "BookTitle_1", author(1L), genre(1L)));
+        var books = List.of(bookDto(1L, "BookTitle_1", 1L, 1L));
         when(bookService.findAll()).thenReturn(books);
 
         mvc.perform(get("/books"))
@@ -74,9 +78,9 @@ class BookControllerTest {
     @DisplayName("должен отображать книгу с комментариями")
     @Test
     void shouldRenderBookDetailsWithComments() throws Exception {
-        var book = book(1L, "BookTitle_1", author(1L), genre(1L));
-        var comments = List.of(new BookComment(1L, "Comment_1", book));
-        when(bookService.findById(1L)).thenReturn(Optional.of(book));
+        var book = bookDto(1L, "BookTitle_1", 1L, 1L);
+        var comments = List.of(new BookComment(1L, "Comment_1", bookEntity(1L, "BookTitle_1", 1L, 1L)));
+        when(bookService.findById(new BookIdDto(1L))).thenReturn(book);
         when(bookCommentService.findByBookId(1L)).thenReturn(comments);
 
         mvc.perform(get("/books/1"))
@@ -91,7 +95,8 @@ class BookControllerTest {
     @DisplayName("должен возвращать 404 для отсутствующей книги")
     @Test
     void shouldReturnNotFoundForMissingBook() throws Exception {
-        when(bookService.findById(404L)).thenReturn(Optional.empty());
+        when(bookService.findById(new BookIdDto(404L)))
+                .thenThrow(new EntityNotFoundException("Book with id 404 not found"));
 
         mvc.perform(get("/books/404"))
                 .andExpect(status().isNotFound());
@@ -105,7 +110,7 @@ class BookControllerTest {
         mvc.perform(get("/books/new"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("books/form"))
-                .andExpect(model().attributeExists("bookForm", "authors", "genres", "formAction"))
+                .andExpect(model().attributeExists("book", "authors", "genres", "formAction"))
                 .andExpect(model().attribute("formAction", "/books"))
                 .andExpect(content().string(containsString("Author_1")))
                 .andExpect(content().string(containsString("Genre_1")));
@@ -114,8 +119,9 @@ class BookControllerTest {
     @DisplayName("должен создавать книгу и перенаправлять на страницу просмотра")
     @Test
     void shouldCreateBook() throws Exception {
-        var savedBook = book(4L, "New Book", author(1L), genre(2L));
-        when(bookService.insert("New Book", 1L, 2L)).thenReturn(savedBook);
+        var bookCreateDto = new BookCreateDto("  New Book  ", 1L, 2L);
+        var savedBook = bookDto(4L, "New Book", 1L, 2L);
+        when(bookService.insert(bookCreateDto)).thenReturn(savedBook);
 
         mvc.perform(post("/books")
                         .param("title", "  New Book  ")
@@ -124,7 +130,7 @@ class BookControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/books/4"));
 
-        verify(bookService).insert("New Book", 1L, 2L);
+        verify(bookService).insert(bookCreateDto);
     }
 
     @DisplayName("должен возвращать форму создания при ошибках валидации")
@@ -138,21 +144,21 @@ class BookControllerTest {
                         .param("genreId", "0"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("books/form"))
-                .andExpect(model().attributeHasFieldErrors("bookForm", "title", "authorId", "genreId"))
+                .andExpect(model().attributeHasFieldErrors("book", "title", "authorId", "genreId"))
                 .andExpect(model().attribute("formAction", "/books"));
     }
 
     @DisplayName("должен отображать форму редактирования книги")
     @Test
     void shouldRenderEditBookForm() throws Exception {
-        var book = book(1L, "BookTitle_1", author(1L), genre(1L));
-        when(bookService.findById(1L)).thenReturn(Optional.of(book));
+        var book = bookDto(1L, "BookTitle_1", 1L, 1L);
+        when(bookService.findById(new BookIdDto(1L))).thenReturn(book);
         mockReferenceData();
 
         mvc.perform(get("/books/1/edit"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("books/form"))
-                .andExpect(model().attributeExists("bookForm", "authors", "genres", "formAction"))
+                .andExpect(model().attributeExists("book", "bookId", "authors", "genres", "formAction"))
                 .andExpect(model().attribute("formAction", "/books/1"))
                 .andExpect(content().string(containsString("BookTitle_1")));
     }
@@ -160,14 +166,17 @@ class BookControllerTest {
     @DisplayName("должен обновлять книгу и перенаправлять на страницу просмотра")
     @Test
     void shouldUpdateBook() throws Exception {
+        var bookUpdateDto = new BookUpdateDto(1L, "  Updated Book  ", 2L, 3L);
+
         mvc.perform(post("/books/1")
+                        .param("id", "1")
                         .param("title", "  Updated Book  ")
                         .param("authorId", "2")
                         .param("genreId", "3"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/books/1"));
 
-        verify(bookService).update(1L, "Updated Book", 2L, 3L);
+        verify(bookService).update(bookUpdateDto);
     }
 
     @DisplayName("должен возвращать форму редактирования при ошибках валидации")
@@ -176,12 +185,13 @@ class BookControllerTest {
         mockReferenceData();
 
         mvc.perform(post("/books/1")
+                        .param("id", "1")
                         .param("title", "")
                         .param("authorId", "0")
                         .param("genreId", "0"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("books/form"))
-                .andExpect(model().attributeHasFieldErrors("bookForm", "title", "authorId", "genreId"))
+                .andExpect(model().attributeHasFieldErrors("book", "title", "authorId", "genreId"))
                 .andExpect(model().attribute("formAction", "/books/1"));
     }
 
@@ -192,7 +202,7 @@ class BookControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/books"));
 
-        verify(bookService).deleteById(1L);
+        verify(bookService).deleteById(new BookIdDto(1L));
     }
 
     @DisplayName("не должен удалять книгу GET-запросом")
@@ -209,8 +219,19 @@ class BookControllerTest {
         when(genreService.findAll()).thenReturn(List.of(genre(1L), genre(2L)));
     }
 
-    private static Book book(long id, String title, Author author, Genre genre) {
-        return new Book(id, title, author, genre);
+    private static BookDto bookDto(long id, String title, long authorId, long genreId) {
+        return new BookDto(
+                id,
+                title,
+                authorId,
+                "Author_%d".formatted(authorId),
+                genreId,
+                "Genre_%d".formatted(genreId)
+        );
+    }
+
+    private static Book bookEntity(long id, String title, long authorId, long genreId) {
+        return new Book(id, title, author(authorId), genre(genreId));
     }
 
     private static Author author(long id) {
