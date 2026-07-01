@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${book.title}">Книга</title>
+    <link rel="stylesheet" th:href="@{/css/application.css}">
+</head>
+<body>
+<header th:replace="~{fragments/navigation :: navigation}"></header>
+
+<main class="page">
+    <section class="page-header page-header--stacked">
+        <div>
+            <p class="eyebrow">Книга #<span th:text="${book.id}">1</span></p>
+            <h1 th:text="${book.title}">BookTitle_1</h1>
+        </div>
+        <div class="actions">
+            <a class="button button--ghost" th:href="@{/books/{id}/edit(id=${book.id})}">Редактировать</a>
+            <form th:action="@{/books/{id}/delete(id=${book.id})}" method="post">
+                <button class="button button--danger" type="submit">Удалить</button>
+            </form>
+        </div>
+    </section>
+
+    <dl class="description-list">
+        <div>
+            <dt>Автор</dt>
+            <dd th:text="${book.authorFullName}">Author_1</dd>
+        </div>
+        <div>
+            <dt>Жанр</dt>
+            <dd th:text="${book.genreName}">Genre_1</dd>
+        </div>
+    </dl>
+
+    <section class="content-section">
+        <h2>Комментарии</h2>
+        <ul class="comment-list" th:if="${!comments.isEmpty()}">
+            <li th:each="comment : ${comments}">
+                <span class="comment-list__id">#<span th:text="${comment.id}">1</span></span>
+                <span th:text="${comment.text}">Comment_1</span>
+            </li>
+        </ul>
+        <p class="muted" th:if="${comments.isEmpty()}">Комментариев пока нет.</p>
+    </section>
+</main>
+</body>
+</html>
