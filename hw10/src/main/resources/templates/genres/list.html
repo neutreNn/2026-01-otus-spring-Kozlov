@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Жанры</title>
+    <link rel="stylesheet" th:href="@{/css/application.css}">
+</head>
+<body>
+<header th:replace="~{fragments/navigation :: navigation}"></header>
+
+<main class="page">
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">Справочник</p>
+            <h1>Жанры</h1>
+        </div>
+    </section>
+
+    <section class="table-section" th:if="${!genres.isEmpty()}">
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Название</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="genre : ${genres}">
+                <td th:text="${genre.id}">1</td>
+                <td th:text="${genre.name}">Genre_1</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="empty-state" th:if="${genres.isEmpty()}">
+        <h2>Жанров пока нет</h2>
+    </section>
+</main>
+</body>
+</html>
