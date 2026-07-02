@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title>Книги</title>
+    <link rel="stylesheet" th:href="@{/css/application.css}">
+    <script defer th:src="@{/js/books-list.js}"></script>
+</head>
+<body>
+<header th:replace="~{fragments/navigation :: navigation}"></header>
+
+<main class="page"
+      data-books-page
+      th:data-can-edit="${#authorization.expression('hasAnyRole(''EDITOR'', ''ADMIN'')')}"
+      th:data-can-delete="${#authorization.expression('hasRole(''ADMIN'')')}">
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">Каталог</p>
+            <h1>Книги</h1>
+        </div>
+        <a class="button button--primary" th:href="@{/books/new}" sec:authorize="hasAnyRole('EDITOR', 'ADMIN')">
+            Добавить книгу
+        </a>
+    </section>
+
+    <p class="status-message" data-books-status role="status">Загрузка книг...</p>
+
+    <section class="table-section is-hidden" data-books-table>
+        <table>
+            <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Название</th>
+                <th scope="col">Автор</th>
+                <th scope="col">Жанр</th>
+                <th scope="col">Действия</th>
+            </tr>
+            </thead>
+            <tbody data-books-table-body></tbody>
+        </table>
+    </section>
+
+    <section class="empty-state is-hidden" data-books-empty>
+        <h2>Книг пока нет</h2>
+        <a class="button button--primary" th:href="@{/books/new}" sec:authorize="hasAnyRole('EDITOR', 'ADMIN')">
+            Добавить первую книгу
+        </a>
+    </section>
+</main>
+</body>
+</html>

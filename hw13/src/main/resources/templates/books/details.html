@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title>Книга</title>
+    <link rel="stylesheet" th:href="@{/css/application.css}">
+    <script defer th:src="@{/js/book-details.js}"></script>
+</head>
+<body>
+<header th:replace="~{fragments/navigation :: navigation}"></header>
+
+<main class="page" data-book-details th:data-book-id="${bookId}">
+    <section class="page-header page-header--stacked">
+        <div>
+            <p class="eyebrow">Книга #<span data-book-id-label th:text="${bookId}">1</span></p>
+            <h1 data-book-title>Загрузка...</h1>
+        </div>
+        <div class="actions">
+            <a class="button button--ghost"
+               th:href="@{/books/{id}/edit(id=${bookId})}"
+               sec:authorize="hasAnyRole('EDITOR', 'ADMIN')">Редактировать</a>
+            <button class="button button--danger"
+                    type="button"
+                    data-delete-book
+                    sec:authorize="hasRole('ADMIN')">Удалить</button>
+        </div>
+    </section>
+
+    <p class="status-message" data-book-status role="status">Загрузка книги...</p>
+
+    <dl class="description-list">
+        <div>
+            <dt>Автор</dt>
+            <dd data-book-author>...</dd>
+        </div>
+        <div>
+            <dt>Жанр</dt>
+            <dd data-book-genre>...</dd>
+        </div>
+    </dl>
+
+    <section class="content-section">
+        <h2>Комментарии</h2>
+        <ul class="comment-list" data-comments-list></ul>
+        <p class="muted is-hidden" data-comments-empty>Комментариев пока нет.</p>
+    </section>
+</main>
+</body>
+</html>

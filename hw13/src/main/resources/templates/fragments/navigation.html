@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<nav class="app-nav" th:fragment="navigation">
+    <a class="app-nav__brand" th:href="@{/books}">Библиотека</a>
+    <div class="app-nav__links">
+        <a th:href="@{/books}">Книги</a>
+        <a th:href="@{/authors}">Авторы</a>
+        <a th:href="@{/genres}">Жанры</a>
+    </div>
+    <div class="app-nav__session" sec:authorize="isAuthenticated()">
+        <span sec:authentication="name">user</span>
+        <form th:action="@{/logout}" method="post">
+            <button class="button button--ghost" type="submit">Выйти</button>
+        </form>
+    </div>
+</nav>
+</body>
+</html>
