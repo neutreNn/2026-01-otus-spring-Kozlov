@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav class="app-nav" th:fragment="navigation">
+    <a class="app-nav__brand" th:href="@{/books}">Библиотека</a>
+    <div class="app-nav__links">
+        <a th:href="@{/books}">Книги</a>
+        <a th:href="@{/authors}">Авторы</a>
+        <a th:href="@{/genres}">Жанры</a>
+        <form class="app-nav__logout" th:action="@{/logout}" method="post">
+            <button type="submit">Выйти</button>
+        </form>
+    </div>
+</nav>
+</body>
+</html>

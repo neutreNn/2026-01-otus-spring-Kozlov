@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title th:text="${bookId == null ? 'Новая книга' : 'Редактирование книги'}">Форма книги</title>
+    <link rel="stylesheet" th:href="@{/css/application.css}">
+    <script defer th:src="@{/js/book-form.js}"></script>
+</head>
+<body>
+<header th:replace="~{fragments/navigation :: navigation}"></header>
+
+<main class="page page--narrow" data-book-form-page th:data-book-id="${bookId}">
+    <section class="page-header page-header--stacked">
+        <div>
+            <p class="eyebrow" data-form-mode th:text="${bookId == null ? 'Создание' : 'Редактирование'}">Создание</p>
+            <h1 data-form-title th:text="${bookId == null ? 'Новая книга' : 'Книга #' + bookId}">Новая книга</h1>
+        </div>
+    </section>
+
+    <p class="status-message" data-form-status role="status">Загрузка формы...</p>
+
+    <form class="form" data-book-form novalidate>
+        <div class="form-field">
+            <label for="title">Название</label>
+            <input id="title" name="title" type="text" required maxlength="255" autocomplete="off">
+            <p class="field-error is-hidden" data-field-error="title">Ошибка</p>
+        </div>
+
+        <div class="form-field">
+            <label for="authorId">Автор</label>
+            <select id="authorId" name="authorId" required>
+                <option value="">Выберите автора</option>
+            </select>
+            <p class="field-error is-hidden" data-field-error="authorId">Ошибка</p>
+        </div>
+
+        <div class="form-field">
+            <label for="genreId">Жанр</label>
+            <select id="genreId" name="genreId" required>
+                <option value="">Выберите жанр</option>
+            </select>
+            <p class="field-error is-hidden" data-field-error="genreId">Ошибка</p>
+        </div>
+
+        <p class="field-error is-hidden" data-form-error role="alert">Не удалось сохранить книгу.</p>
+
+        <div class="actions">
+            <button class="button button--primary" type="submit" data-submit-button>Сохранить</button>
+            <a class="button button--ghost" th:href="@{/books}">Отмена</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>
