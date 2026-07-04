@@ -13,7 +13,6 @@ import ru.otus.hw.models.Author;
 import ru.otus.hw.models.Book;
 import ru.otus.hw.models.Genre;
 import ru.otus.hw.repositories.AuthorRepository;
-import ru.otus.hw.repositories.BookCommentRepository;
 import ru.otus.hw.repositories.BookRepository;
 import ru.otus.hw.repositories.GenreRepository;
 
@@ -27,8 +26,6 @@ public class BookServiceImpl implements BookService {
     private final GenreRepository genreRepository;
 
     private final BookRepository bookRepository;
-
-    private final BookCommentRepository bookCommentRepository;
 
     private final SequenceService sequenceService;
 
@@ -76,9 +73,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Mono<Void> deleteById(BookIdDto bookIdDto) {
-        return bookRepository.deleteById(bookIdDto.getId())
-                .then(bookCommentRepository.deleteByBookId(bookIdDto.getId()))
-                .then();
+        return bookRepository.deleteById(bookIdDto.getId());
     }
 
     private Mono<Book> findBook(Long bookId) {
