@@ -3,14 +3,14 @@ package ru.otus.hw.controllers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @DisplayName("MVC-контроллер страниц книг")
 @WebMvcTest(BookController.class)
-@WithMockUser
+@AutoConfigureMockMvc(addFilters = false)
 class BookControllerTest {
     @Autowired
     private MockMvc mvc;
@@ -35,7 +35,7 @@ class BookControllerTest {
     @DisplayName("должен отображать страницу списка книг")
     @Test
     void shouldRenderBooksListPage() throws Exception {
-        mvc.perform(get("/books"))
+        mvc.perform(getPage("/books"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("books/list"))
                 .andExpect(content().string(containsString("/js/books-list.js")))
@@ -45,7 +45,7 @@ class BookControllerTest {
     @DisplayName("должен отображать страницу книги с идентификатором для AJAX-загрузки")
     @Test
     void shouldRenderBookDetailsPage() throws Exception {
-        mvc.perform(get("/books/1"))
+        mvc.perform(getPage("/books/1"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("books/details"))
                 .andExpect(model().attribute("bookId", 1L))
@@ -56,7 +56,7 @@ class BookControllerTest {
     @DisplayName("должен отображать страницу создания книги")
     @Test
     void shouldRenderNewBookPage() throws Exception {
-        mvc.perform(get("/books/new"))
+        mvc.perform(getPage("/books/new"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("books/form"))
                 .andExpect(content().string(containsString("/js/book-form.js")))
@@ -66,7 +66,7 @@ class BookControllerTest {
     @DisplayName("должен отображать страницу редактирования книги с идентификатором для AJAX-загрузки")
     @Test
     void shouldRenderEditBookPage() throws Exception {
-        mvc.perform(get("/books/1/edit"))
+        mvc.perform(getPage("/books/1/edit"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("books/form"))
                 .andExpect(model().attribute("bookId", 1L))
@@ -77,7 +77,14 @@ class BookControllerTest {
     @DisplayName("не должен выполнять создание книги через MVC POST")
     @Test
     void shouldNotCreateBookByMvcPost() throws Exception {
-        mvc.perform(post("/books").with(csrf()))
+        mvc.perform(post("/books"))
                 .andExpect(status().isMethodNotAllowed());
+    }
+
+    private static MockHttpServletRequestBuilder getPage(String url) {
+        return get(url).requestAttr("_csrf", new CsrfTokenStub("test-token", "X-CSRF-TOKEN"));
+    }
+
+    private record CsrfTokenStub(String token, String headerName) {
     }
 }

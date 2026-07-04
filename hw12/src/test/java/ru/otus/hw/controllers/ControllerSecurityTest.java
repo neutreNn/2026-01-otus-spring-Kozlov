@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
@@ -46,6 +47,38 @@ class ControllerSecurityTest {
         mvc.perform(get(url))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @WithMockUser
+    @DisplayName("должна разрешать аутентифицированному пользователю доступ к защищенным URL")
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "/books",
+            "/books/1",
+            "/books/new",
+            "/books/1/edit",
+            "/authors",
+            "/genres",
+            "/api/books",
+            "/api/books/1",
+            "/api/books/1/comments",
+            "/api/authors",
+            "/api/genres"
+    })
+    void shouldAllowAuthenticatedUserToOpenProtectedUrls(String url) throws Exception {
+        mvc.perform(get(url))
+                .andExpect(status().isOk())
+                .andExpect(authenticated().withUsername("user"));
+    }
+
+    @WithMockUser
+    @DisplayName("должна перенаправлять аутентифицированного пользователя с главной страницы на список книг")
+    @Test
+    void shouldRedirectAuthenticatedUserFromRootToBooks() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/books"))
+                .andExpect(authenticated().withUsername("user"));
     }
 
     @DisplayName("должна открывать страницу логина всем пользователям")
