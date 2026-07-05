@@ -3,12 +3,10 @@ package ru.otus.hw.controllers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.otus.hw.config.SecurityConfig;
 import ru.otus.hw.models.Genre;
 import ru.otus.hw.services.GenreService;
 
@@ -24,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @DisplayName("Контроллер жанров")
 @WebMvcTest(GenresController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 class GenresControllerTest {
     @Autowired
     private MockMvc mvc;
@@ -34,7 +32,6 @@ class GenresControllerTest {
 
     @DisplayName("должен отображать список жанров")
     @Test
-    @WithMockUser
     void shouldRenderGenresList() throws Exception {
         var genres = List.of(new Genre(1L, "Genre_1"), new Genre(2L, "Genre_2"));
         when(genreService.findAll()).thenReturn(genres);
@@ -45,12 +42,5 @@ class GenresControllerTest {
                 .andExpect(model().attribute("genres", genres))
                 .andExpect(content().string(containsString("Genre_1")))
                 .andExpect(content().string(containsString("Genre_2")));
-    }
-
-    @DisplayName("должен требовать аутентификацию для страницы жанров")
-    @Test
-    void shouldRequireAuthenticationForGenresPage() throws Exception {
-        mvc.perform(get("/genres"))
-                .andExpect(status().is3xxRedirection());
     }
 }

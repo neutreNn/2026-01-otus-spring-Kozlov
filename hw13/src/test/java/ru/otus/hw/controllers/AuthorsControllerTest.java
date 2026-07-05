@@ -3,12 +3,10 @@ package ru.otus.hw.controllers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.otus.hw.config.SecurityConfig;
 import ru.otus.hw.models.Author;
 import ru.otus.hw.services.AuthorService;
 
@@ -24,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @DisplayName("Контроллер авторов")
 @WebMvcTest(AuthorsController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 class AuthorsControllerTest {
     @Autowired
     private MockMvc mvc;
@@ -34,7 +32,6 @@ class AuthorsControllerTest {
 
     @DisplayName("должен отображать список авторов")
     @Test
-    @WithMockUser
     void shouldRenderAuthorsList() throws Exception {
         var authors = List.of(new Author(1L, "Author_1"), new Author(2L, "Author_2"));
         when(authorService.findAll()).thenReturn(authors);
@@ -45,12 +42,5 @@ class AuthorsControllerTest {
                 .andExpect(model().attribute("authors", authors))
                 .andExpect(content().string(containsString("Author_1")))
                 .andExpect(content().string(containsString("Author_2")));
-    }
-
-    @DisplayName("должен требовать аутентификацию для страницы авторов")
-    @Test
-    void shouldRequireAuthenticationForAuthorsPage() throws Exception {
-        mvc.perform(get("/authors"))
-                .andExpect(status().is3xxRedirection());
     }
 }

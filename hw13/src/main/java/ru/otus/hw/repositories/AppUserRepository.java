@@ -7,6 +7,6 @@ import ru.otus.hw.models.AppUser;
 import java.util.Optional;
 
 public interface AppUserRepository extends JpaRepository<AppUser, Long> {
-    @EntityGraph(attributePaths = {"managedGenre", "roles"})
+    @EntityGraph(attributePaths = "roles")
     Optional<AppUser> findByUsername(String username);
 }

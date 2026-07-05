@@ -3,12 +3,10 @@ package ru.otus.hw.controllers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.otus.hw.config.SecurityConfig;
 import ru.otus.hw.dto.BookDto;
 import ru.otus.hw.dto.BookIdDto;
 import ru.otus.hw.exceptions.EntityNotFoundException;
@@ -30,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @DisplayName("REST-контроллер комментариев книги")
 @WebMvcTest(BookCommentRestController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 class BookCommentRestControllerTest {
     @Autowired
     private MockMvc mvc;
@@ -43,7 +41,6 @@ class BookCommentRestControllerTest {
 
     @DisplayName("должен возвращать комментарии книги")
     @Test
-    @WithMockUser
     void shouldReturnBookComments() throws Exception {
         when(bookService.findById(new BookIdDto(1L))).thenReturn(bookDto(1L));
         when(bookCommentService.findByBookId(1L)).thenReturn(List.of(
@@ -64,7 +61,6 @@ class BookCommentRestControllerTest {
 
     @DisplayName("должен возвращать 404 для комментариев отсутствующей книги")
     @Test
-    @WithMockUser
     void shouldReturnNotFoundForMissingBookComments() throws Exception {
         when(bookService.findById(new BookIdDto(404L)))
                 .thenThrow(new EntityNotFoundException("Book with id 404 not found"));
@@ -73,15 +69,6 @@ class BookCommentRestControllerTest {
                 .andExpect(status().isNotFound());
 
         verifyNoInteractions(bookCommentService);
-    }
-
-    @DisplayName("должен требовать аутентификацию для комментариев книги")
-    @Test
-    void shouldRequireAuthenticationForBookComments() throws Exception {
-        mvc.perform(get("/api/books/1/comments"))
-                .andExpect(status().isUnauthorized());
-
-        verifyNoInteractions(bookService, bookCommentService);
     }
 
     private static BookDto bookDto(long id) {

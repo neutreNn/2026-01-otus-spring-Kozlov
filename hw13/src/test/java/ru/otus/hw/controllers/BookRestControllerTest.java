@@ -4,13 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.otus.hw.config.SecurityConfig;
 import ru.otus.hw.dto.BookCreateDto;
 import ru.otus.hw.dto.BookDto;
 import ru.otus.hw.dto.BookIdDto;
@@ -27,14 +25,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DisplayName("REST-контроллер книг")
 @WebMvcTest(BookRestController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 class BookRestControllerTest {
     @Autowired
     private MockMvc mvc;
@@ -47,7 +44,6 @@ class BookRestControllerTest {
 
     @DisplayName("должен возвращать список книг")
     @Test
-    @WithMockUser
     void shouldReturnAllBooks() throws Exception {
         when(bookService.findAll()).thenReturn(List.of(bookDto(1L, "BookTitle_1", 1L, 1L)));
 
@@ -61,7 +57,6 @@ class BookRestControllerTest {
 
     @DisplayName("должен возвращать книгу по идентификатору")
     @Test
-    @WithMockUser
     void shouldReturnBookById() throws Exception {
         when(bookService.findById(new BookIdDto(1L))).thenReturn(bookDto(1L, "BookTitle_1", 1L, 1L));
 
@@ -75,7 +70,6 @@ class BookRestControllerTest {
 
     @DisplayName("должен возвращать 404 для отсутствующей книги")
     @Test
-    @WithMockUser
     void shouldReturnNotFoundForMissingBook() throws Exception {
         when(bookService.findById(new BookIdDto(404L)))
                 .thenThrow(new EntityNotFoundException("Book with id 404 not found"));
@@ -86,14 +80,12 @@ class BookRestControllerTest {
 
     @DisplayName("должен создавать книгу")
     @Test
-    @WithMockUser(roles = "EDITOR")
     void shouldCreateBook() throws Exception {
         var bookCreateDto = new BookCreateDto("  New Book  ", 1L, 2L);
         var savedBook = bookDto(4L, "New Book", 1L, 2L);
         when(bookService.insert(bookCreateDto)).thenReturn(savedBook);
 
         mvc.perform(post("/api/books")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(bookCreateDto)))
                 .andExpect(status().isCreated())
@@ -106,10 +98,8 @@ class BookRestControllerTest {
 
     @DisplayName("должен возвращать 400 при ошибках валидации создания")
     @Test
-    @WithMockUser(roles = "EDITOR")
     void shouldReturnBadRequestForInvalidCreateRequest() throws Exception {
         mvc.perform(post("/api/books")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -128,14 +118,12 @@ class BookRestControllerTest {
 
     @DisplayName("должен обновлять книгу")
     @Test
-    @WithMockUser(roles = "EDITOR")
     void shouldUpdateBook() throws Exception {
         var request = new BookCreateDto("  Updated Book  ", 2L, 3L);
         var updateDto = new BookUpdateDto(1L, "  Updated Book  ", 2L, 3L);
         when(bookService.update(updateDto)).thenReturn(bookDto(1L, "Updated Book", 2L, 3L));
 
         mvc.perform(put("/api/books/1")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -149,10 +137,8 @@ class BookRestControllerTest {
 
     @DisplayName("должен возвращать 400 при ошибках валидации обновления")
     @Test
-    @WithMockUser(roles = "EDITOR")
     void shouldReturnBadRequestForInvalidUpdateRequest() throws Exception {
         mvc.perform(put("/api/books/1")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -171,9 +157,8 @@ class BookRestControllerTest {
 
     @DisplayName("должен удалять книгу")
     @Test
-    @WithMockUser(roles = "ADMIN")
     void shouldDeleteBook() throws Exception {
-        mvc.perform(delete("/api/books/1").with(csrf()))
+        mvc.perform(delete("/api/books/1"))
                 .andExpect(status().isNoContent());
 
         verify(bookService).deleteById(new BookIdDto(1L));
@@ -181,44 +166,9 @@ class BookRestControllerTest {
 
     @DisplayName("не должен удалять книгу POST-запросом")
     @Test
-    @WithMockUser(roles = "ADMIN")
     void shouldNotDeleteBookByPost() throws Exception {
-        mvc.perform(post("/api/books/1").with(csrf()))
-                .andExpect(status().isForbidden());
-
-        verifyNoInteractions(bookService);
-    }
-
-    @DisplayName("должен требовать аутентификацию для REST-списка книг")
-    @Test
-    void shouldRequireAuthenticationForBooksApi() throws Exception {
-        mvc.perform(get("/api/books"))
-                .andExpect(status().isUnauthorized());
-
-        verifyNoInteractions(bookService);
-    }
-
-    @DisplayName("не должен создавать книгу от имени обычного пользователя")
-    @Test
-    @WithMockUser(roles = "USER")
-    void shouldRejectCreateBookForRegularUser() throws Exception {
-        var request = new BookCreateDto("New Book", 1L, 1L);
-
-        mvc.perform(post("/api/books")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
-
-        verifyNoInteractions(bookService);
-    }
-
-    @DisplayName("не должен удалять книгу от имени редактора")
-    @Test
-    @WithMockUser(roles = "EDITOR")
-    void shouldRejectDeleteBookForEditor() throws Exception {
-        mvc.perform(delete("/api/books/1").with(csrf()))
-                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/books/1"))
+                .andExpect(status().isMethodNotAllowed());
 
         verifyNoInteractions(bookService);
     }

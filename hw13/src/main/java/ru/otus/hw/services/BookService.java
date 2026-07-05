@@ -15,12 +15,12 @@ public interface BookService {
     @PreAuthorize("isAuthenticated()")
     List<BookDto> findAll();
 
-    @PreAuthorize("@bookAuthorizationService.canCreate(authentication, #bookCreateDto)")
+    @PreAuthorize("hasAnyRole('EDITOR', 'ADMIN')")
     BookDto insert(BookCreateDto bookCreateDto);
 
-    @PreAuthorize("@bookAuthorizationService.canUpdate(authentication, #bookUpdateDto)")
+    @PreAuthorize("hasAnyRole('EDITOR', 'ADMIN')")
     BookDto update(BookUpdateDto bookUpdateDto);
 
-    @PreAuthorize("@bookAuthorizationService.canDelete(authentication, #bookIdDto)")
+    @PreAuthorize("hasRole('ADMIN')")
     void deleteById(BookIdDto bookIdDto);
 }

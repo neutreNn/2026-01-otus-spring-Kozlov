@@ -45,42 +45,33 @@ class BookServiceAuthorizationTest {
                 .isInstanceOf(AccessDeniedException.class);
     }
 
-    @DisplayName("должна разрешать редактору создавать книгу в закрепленном жанре")
+    @DisplayName("должна разрешать редактору создавать книгу")
     @Test
     @WithMockUser(username = "editor", roles = "EDITOR")
-    void shouldAllowEditorToCreateBookInManagedGenre() {
-        var actualBook = bookService.insert(new BookCreateDto("  Editor Book  ", 1L, 1L));
+    void shouldAllowEditorToCreateBook() {
+        var actualBook = bookService.insert(new BookCreateDto("  Editor Book  ", 1L, 2L));
 
         assertThat(actualBook.getId()).isPositive();
         assertThat(actualBook.getTitle()).isEqualTo("Editor Book");
-        assertThat(actualBook.getGenreId()).isEqualTo(1L);
+        assertThat(actualBook.getGenreId()).isEqualTo(2L);
     }
 
-    @DisplayName("должна запрещать редактору создавать книгу в чужом жанре")
+    @DisplayName("должна разрешать редактору обновлять книгу")
     @Test
     @WithMockUser(username = "editor", roles = "EDITOR")
-    void shouldRejectEditorCreateBookInAnotherGenre() {
-        assertThatThrownBy(() -> bookService.insert(new BookCreateDto("Book", 1L, 2L)))
-                .isInstanceOf(AccessDeniedException.class);
+    void shouldAllowEditorToUpdateBook() {
+        var actualBook = bookService.update(new BookUpdateDto(2L, "  Updated Book  ", 1L, 3L));
+
+        assertThat(actualBook.getId()).isEqualTo(2L);
+        assertThat(actualBook.getTitle()).isEqualTo("Updated Book");
+        assertThat(actualBook.getGenreId()).isEqualTo(3L);
     }
 
-    @DisplayName("должна запрещать редактору менять книгу вне закрепленного жанра")
+    @DisplayName("должна запрещать редактору удалять книгу")
     @Test
     @WithMockUser(username = "editor", roles = "EDITOR")
-    void shouldRejectEditorUpdateBookOutsideManagedGenre() {
-        var updateDto = new BookUpdateDto(2L, "Book", 1L, 1L);
-
-        assertThatThrownBy(() -> bookService.update(updateDto))
-                .isInstanceOf(AccessDeniedException.class);
-    }
-
-    @DisplayName("должна запрещать редактору переносить книгу в чужой жанр")
-    @Test
-    @WithMockUser(username = "editor", roles = "EDITOR")
-    void shouldRejectEditorMoveBookToAnotherGenre() {
-        var updateDto = new BookUpdateDto(1L, "Book", 1L, 2L);
-
-        assertThatThrownBy(() -> bookService.update(updateDto))
+    void shouldRejectDeleteOperationForEditor() {
+        assertThatThrownBy(() -> bookService.deleteById(new BookIdDto(1L)))
                 .isInstanceOf(AccessDeniedException.class);
     }
 
