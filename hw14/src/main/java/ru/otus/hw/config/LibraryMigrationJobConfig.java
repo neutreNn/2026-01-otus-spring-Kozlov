@@ -10,6 +10,9 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.flow.Flow;
+import org.springframework.batch.core.job.flow.support.SimpleFlow;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -19,6 +22,8 @@ import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuild
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.PlatformTransactionManager;
 import ru.otus.hw.migration.processor.AuthorRowToDocumentProcessor;
@@ -44,17 +49,40 @@ public class LibraryMigrationJobConfig {
 
     @Bean
     public Job libraryMigrationJob(JobRepository jobRepository,
-                                   @Qualifier("migrateAuthorsStep") Step migrateAuthorsStep,
-                                   @Qualifier("migrateGenresStep") Step migrateGenresStep,
+                                   @Qualifier("referenceDataMigrationFlow") Flow referenceDataMigrationFlow,
                                    @Qualifier("migrateBooksStep") Step migrateBooksStep,
                                    @Qualifier("migrateBookCommentsStep") Step migrateBookCommentsStep) {
         return new JobBuilder("libraryMigrationJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
-                .start(migrateAuthorsStep)
-                .next(migrateGenresStep)
+                .start(referenceDataMigrationFlow)
                 .next(migrateBooksStep)
                 .next(migrateBookCommentsStep)
+                .end()
                 .build();
+    }
+
+    @Bean
+    public Flow referenceDataMigrationFlow(@Qualifier("migrateAuthorsStep") Step migrateAuthorsStep,
+                                           @Qualifier("migrateGenresStep") Step migrateGenresStep,
+                                           @Qualifier("referenceDataTaskExecutor") TaskExecutor taskExecutor) {
+        var authorsMigrationFlow = new FlowBuilder<SimpleFlow>("authorsMigrationFlow")
+                .start(migrateAuthorsStep)
+                .build();
+        var genresMigrationFlow = new FlowBuilder<SimpleFlow>("genresMigrationFlow")
+                .start(migrateGenresStep)
+                .build();
+
+        return new FlowBuilder<SimpleFlow>("referenceDataMigrationFlow")
+                .split(taskExecutor)
+                .add(authorsMigrationFlow, genresMigrationFlow)
+                .build();
+    }
+
+    @Bean
+    public TaskExecutor referenceDataTaskExecutor() {
+        var taskExecutor = new SimpleAsyncTaskExecutor("reference-data-migration-");
+        taskExecutor.setConcurrencyLimit(2);
+        return taskExecutor;
     }
 
     @Bean
