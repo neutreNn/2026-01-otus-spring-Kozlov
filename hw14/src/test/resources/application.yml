@@ -1,0 +1,21 @@
+spring:
+  autoconfigure:
+    exclude: org.springframework.shell.boot.StandardCommandsAutoConfiguration
+  data:
+    mongodb:
+      database: library-batch-test
+  shell:
+    history:
+      enabled: false
+    interactive:
+      enabled: false
+    noninteractive:
+      enabled: false
+    script:
+      enabled: false
+
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 7.0.14
